@@ -3,43 +3,47 @@ import os
 from glob import glob
 from zipfile import ZipFile
 import sys  
+import re
 
 # set default utf8 encoding to open file
 reload(sys)  
 sys.setdefaultencoding('utf8')
 
-# normalize word
-def normalize(text):
-	norm_words = []
-	for word in text:
-		norm_words.append(word.lower())
-	return norm_words
+class Sentence(object):
+	def __init__(self, dirname):
+		self.dirname = dirname
 
-# get word from text
-def get_words(text_dir):
-	# iterate through all the zip files (different years)
-	os.chdir(text_dir)
-	zipfiles = glob('*zip')
+	# normalization
+	def normalize(self, text):
+		# split on non-alphanumeric characters(space and punctuation)
+		norm_words = re.split('\W+', text.lower())
+		return norm_words
 
-	for zfname in zipfiles:
-		zfile = ZipFile(zfname)
-		members = zfile.namelist()
-		# iterate through all texts in zip file
-		for fname in members:
-			# use majority opinions text
-			# if not fname.endswith('-maj.txt'):
-				# continue
-            # open file and read line by line
-			with zfile.open(fname) as f:
-				for line in f:      
-					yield normalize(line.split())
+	# get word from text
+	def __iter__(self):
+		# iterate through all the zip files (different years)
+		os.chdir(self.dirname)
+		zipfiles = glob('*zip')
+
+		for zfname in zipfiles:
+			zfile = ZipFile(zfname)
+			members = zfile.namelist()
+			# iterate through all texts in zip file
+			for fname in members:
+				# use majority opinions text
+				if not fname.endswith('-maj.txt'):
+					continue
+	            # open file and read line by line
+				with zfile.open(fname) as f:
+					for line in f:      
+						yield self.normalize(line)
 
 def train_model(text_dir):
 	# generate words from text
-	words = get_words(text_dir)
-	
+	sentences = Sentence(text_dir)
+
 	# train word vectors
-	model = gensim.models.Word2Vec(words)
+	model = gensim.models.Word2Vec(sentences)
 	model.save(model_name)
 
 def use_model():
