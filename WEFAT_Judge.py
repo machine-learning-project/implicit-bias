@@ -70,12 +70,18 @@ class WVModel(object):
 		for w in W:
 			if w in self.model.wv.vocab:
 				g_w.append(self.model[w])
+			else:
+				print w, 'not in vocabulary'
 		for a in A:
 			if a in self.model.wv.vocab:
 				g_a.append(self.model[a])
+			else:
+				print a, 'not in vocabulary'
 		for b in B:
 			if b in self.model.wv.vocab:
-				g_b.append(self.model[b])			
+				g_b.append(self.model[b])
+			else:
+				print b, 'not in vocabulary'			
 
 		g_x = g_a + g_b
 
@@ -93,8 +99,15 @@ def main():
 	text_dir = 'cleaned'
 
 	wvmodel = WVModel(text_dir)
-	wvmodel.train_model()
-	# wvmodel.use_model()
+
+	if len(sys.argv) != 2:
+		print 'usage: python WEFAT_Judge.py [-t|-u]'
+		print '-t: train model; -u: use model'
+	elif sys.argv[1] == '-t':
+		wvmodel.train_model()
+	elif sys.argv[1] == '-u':
+		wvmodel.use_model()
+
 
 if __name__ == "__main__":
 	main()
