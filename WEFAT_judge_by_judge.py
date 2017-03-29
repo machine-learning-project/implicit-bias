@@ -23,24 +23,31 @@ def load_dta(fname, res):
 			key = row['Author']
 			val = row['caseid']
 			# disregard empty entry
-			if key == '':
+			if key == '' or val == '':
 				continue
-			if key in dic.keys() and val not in dic[key]:
-				dic[key].append(val)
+			if key in dic.keys():
+				if val not in dic[key]:
+					dic[key].append(val)
 			else:
 				dic[key] = [val]
 
-	# write result into csv
+	# write result into csv in the following format:
+	# JudgeName, caseid_1 caseid_2 ...
 	with open(res, 'wb') as csvfile:
 		reswriter = csv.writer(csvfile, delimiter=',')
 		
 		for key, value in dic.iteritems():
-			valstr = ''
-			for i in value:
-				valstr += i + ' '
+			valstr = ' '.join(value)
 			reswriter.writerow([key] + [valstr])
     	
-
+def load_csv(fname):
+	# set maxsize as limitsize to read huge fields
+	csv.field_size_limit(sys.maxsize)
+	with open(fname, 'rb') as csvfile:
+		cjreader = csv.reader(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+		for row in cjreader:
+			print 'judge', row[0]
+			print 'cases', row[1].split(' ')
 
 def main():
 	dta_fname = 'data/BloombergVOTELEVEL_Touse.dta'
@@ -57,6 +64,7 @@ def main():
 	elif sys.argv[1] == '-u':
 		# use cj_fname to train word vector judge by judge
 		print 'unfinished'
+		load_csv(cj_fname)
 
 	
 
