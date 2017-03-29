@@ -34,16 +34,23 @@ class Sentence(object):
 
 			zfile = ZipFile(zfname)
 			members = zfile.namelist()
+			# filter text in specific years
+			# year = int(zfname.split('/')[-1][:-4])
+			# print year, year < 1980
+			# if year < 1980:
+			# 	continue
 			# iterate through all texts in zip file
 			for fname in members:
 				# use majority opinions text
 				if not fname.endswith('-maj.txt'):
 					continue
 				caseid = fname.split('/')[-1][:-4].split('-')[0]
-				print fname, caseid
+
 				# if there is a specified case set, then only process cases in the set
 				if len(self.caseid_set) != 0 and caseid not in self.caseid_set:
-					continue         
+					continue 
+				print fname, caseid       
+
 				# open file and read line by line
 				with zfile.open(fname) as f:
 					for line in f:    
@@ -51,18 +58,20 @@ class Sentence(object):
 
 class WVModel(object):
 
-	def __init__(self, text_dir, judge_name = 'all'):
+	def __init__(self, text_dir, judge_name = 'all', caseid_set = []):
 		self.text_dir = text_dir
-		self.model_name = 'tmp/model' + judge_name
+		self.model_name = 'tmp/model-' + judge_name
+		self.judge_name = judge_name
+		self.caseid_set = caseid_set
 
-	def train_model(self):
+	def train_model(self, min_count_ = 5):
 		# generate words from text
-		sentences = Sentence(self.text_dir)
+		sentences = Sentence(self.text_dir, self.caseid_set)
 		# train word vectors
-		print 'training model...'
-		model = gensim.models.Word2Vec(sentences)
+		print 'training model...' + self.model_name
+		model = gensim.models.Word2Vec(sentences, min_count = min_count_)
 		# save model
-		print 'saving model...'
+		print 'saving model...' + self.model_name
 		model.save(self.model_name)
 
 	def load_word_vector(self, W, A, B):
@@ -97,7 +106,7 @@ class WVModel(object):
 		self.model = gensim.models.Word2Vec.load(self.model_name)
 
 		# use WEFAT method
-		WEFAT.wefat(self.load_word_vector)
+		WEFAT.wefat(self.load_word_vector, self.judge_name)
 
 def main():
 	# directory for text data 

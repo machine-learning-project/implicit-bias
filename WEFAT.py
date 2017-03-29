@@ -52,7 +52,7 @@ def load_from_glove(W, A, B):
     print "finished loading"
     return g_a, g_b, g_x, g_w
 
-def wefat(load_word_vector):
+def wefat(load_word_vector, resfname = 'result_score'):
     # trained word vectors, common crawl
     w_f = open('target_words')
     a_f = open('attribute_a')
@@ -76,6 +76,12 @@ def wefat(load_word_vector):
     for w in g_w:
         s_v.append((mean_cos(w,g_a)-mean_cos(w,g_b))/std_dev(w,g_x))
     print s_v
+    resdir = 'result-score/'
+    print 'saving result score to...' + resdir + resfname
+    resfile = open(resdir + resfname + '.txt', 'w')
+    for item in s_v:
+        resfile.write(str(item) + ', ')
+    resfile.close() 
 
     w_f.close()
     a_f.close()
