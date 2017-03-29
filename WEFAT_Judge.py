@@ -12,8 +12,9 @@ sys.setdefaultencoding('utf8')
 
 # sentence generator from text
 class Sentence(object):
-	def __init__(self, dirname):
+	def __init__(self, dirname, caseid_set=[]):
 		self.dirname = dirname
+		self.caseid_set = caseid_set
 		# iterate through all the zip files (different years)
 		self.zipfiles = glob(dirname + '/*zip')
 
@@ -38,7 +39,11 @@ class Sentence(object):
 				# use majority opinions text
 				if not fname.endswith('-maj.txt'):
 					continue
-				print fname	            
+				caseid = fname.split('/')[-1][:-4].split('-')[0]
+				print fname, caseid
+				# if there is a specified case set, then only process cases in the set
+				if len(self.caseid_set) != 0 and caseid not in self.caseid_set:
+					continue         
 				# open file and read line by line
 				with zfile.open(fname) as f:
 					for line in f:    
@@ -46,9 +51,9 @@ class Sentence(object):
 
 class WVModel(object):
 
-	def __init__(self, text_dir):
+	def __init__(self, text_dir, judge_name = 'all'):
 		self.text_dir = text_dir
-		self.model_name = 'tmp/mymodel'
+		self.model_name = 'tmp/model' + judge_name
 
 	def train_model(self):
 		# generate words from text
