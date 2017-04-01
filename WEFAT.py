@@ -97,6 +97,9 @@ def s_sum_word_attrs(target_words, g_a, g_b):
         s += mean_cos(w, g_a) - mean_cos(w, g_b)
     return s
 
+def std_dev_score(g_union, g_a, g_b):
+    return 1.0
+
 def weat(load_word_vector, resfname = 'result_score'):
     file_dir = 'target-attr-words/'
     type_str = 'occupation'
@@ -114,9 +117,14 @@ def weat(load_word_vector, resfname = 'result_score'):
     B = b_f.readlines()[0].strip().split(', ')
 
     # load corresponding word vectors
-    g_a, g_b, g_x, g_w, g_y = load_word_vector(X, A, B, Y)
+    g_a, g_b, g_x, g_y, g_union = load_word_vector(X, A, B, Y)
 
     score = s_sum_word_attrs(g_x, g_a, g_b) - s_sum_word_attrs(g_y, g_a, g_b)
+    
+    effect_size = s_sum_word_attrs(g_x, g_a, g_b)/len(g_x) - s_sum_word_attrs(g_y, g_a, g_b)/len(g_y)
+    effect_size /= std_dev_score(g_union, g_a, g_b)
+
+    print score, effect_size
 
     return score
 
