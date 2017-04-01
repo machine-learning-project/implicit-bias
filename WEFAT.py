@@ -1,4 +1,5 @@
 import math
+import sys
 
 # func for calcuate cos distance of two vectors
 def cos(x,y):
@@ -98,7 +99,11 @@ def s_sum_word_attrs(target_words, g_a, g_b):
     return s
 
 def std_dev_score(g_union, g_a, g_b):
-    return 1.0
+    cos_rst = []
+    for i in range(len(g_union)):
+        cos_rst.append(mean_cos(g_union[i], g_a) - mean_cos(g_union[i], g_b))
+    cos_avg = sum(cos_rst)/len(cos_rst)
+    return sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst)
 
 def weat(load_word_vector, resfname = 'result_score'):
     file_dir = 'target-attr-words/'
@@ -130,7 +135,14 @@ def weat(load_word_vector, resfname = 'result_score'):
 
 
 def main():
-    wefat(load_from_glove)
 
+    if len(sys.argv) != 2:
+        print 'usage: python WEFAT.py [-wefat|-weat]'
+    elif sys.argv[1] == '-wefat':
+        wefat(load_from_glove)
+    elif sys.argv[1] == '-weat':
+        weat(load_from_glove)
+
+    
 if __name__ == "__main__":
     main()
