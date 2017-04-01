@@ -74,18 +74,19 @@ class WVModel(object):
 		print 'saving model...' + self.model_name
 		model.save(self.model_name)
 
-	def load_word_vector(self, W, A, B):
+	def load_word_vector(self, X, A, B, Y=[]):
 		g_a = []
 		g_b = []
-		g_w = []
 		g_x = []
+		g_y = []
+		g_union = []
 
 		# get word vectors from model
-		for w in W:
-			if w in self.model.wv.vocab:
-				g_w.append(self.model[w])
+		for x in X:
+			if x in self.model.wv.vocab:
+				g_x.append(self.model[x])
 			else:
-				print w, 'not in vocabulary'
+				print x, 'not in vocabulary'
 		for a in A:
 			if a in self.model.wv.vocab:
 				g_a.append(self.model[a])
@@ -95,11 +96,16 @@ class WVModel(object):
 			if b in self.model.wv.vocab:
 				g_b.append(self.model[b])
 			else:
-				print b, 'not in vocabulary'			
+				print b, 'not in vocabulary'	
+		for y in Y:
+			if y in self.model.wv.vocab:
+				g_y.append(self.model[y])
+			else:
+				print y, 'not in vocabulary'		
 
-		g_x = g_a + g_b
+		g_union = g_a + g_b
 
-		return g_a, g_b, g_x, g_w
+		return g_a, g_b, g_x, g_y, g_union
 
 	def use_model(self):
 		# load model
