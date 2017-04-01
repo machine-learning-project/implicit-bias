@@ -25,11 +25,12 @@ def std_dev(w,X):
     cos_avg = sum(cos_rst)/len(cos_rst)
     return sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst)
 
-def load_from_glove(W, A, B):
+def load_from_glove(X, A, B, Y=[]):
     g_a = []
     g_b = []
-    g_w = []
-    g_x = []    
+    g_x = []
+    g_union = []   
+    g_y = [] 
     
     print "loading file"
 
@@ -37,26 +38,27 @@ def load_from_glove(W, A, B):
         v = line.strip().split(' ')
         wi = v[0]
         v = [float(a) for a in v[1:]]
-        for w in W:
-            if wi == w:
-                g_w.append(v)
-        for w in A:
-            if wi == w:
-                g_a.append(v)
-        for w in B:
-            if wi == w:
-                g_b.append(v)
+        if wi in X:
+            g_x.append(v)
+        if wi in A:
+            g_a.append(v)
+        if wi in B:
+            g_b.append(v)
+        if wi in Y:
+            g_y.append(v)
 
-    g_x = g_a + g_b
+    g_union = g_a + g_b
 
     print "finished loading"
-    return g_a, g_b, g_x, g_w
+    return g_a, g_b, g_x, g_y, g_union
 
 def wefat(load_word_vector, resfname = 'result_score'):
     # trained word vectors, common crawl
-    w_f = open('target_words')
-    a_f = open('attribute_a')
-    b_f = open('attribute_b')
+    file_dir = 'target-attr-words/'
+    type_str = 'occupation'
+    w_f = open(file_dir + 'target_words-' + type_str)
+    a_f = open(file_dir + 'attribute_a-' + type_str)
+    b_f = open(file_dir + 'attribute_b-' + type_str)
 
     # target words
     W = w_f.readlines()[0].strip().split(', ')
@@ -68,13 +70,14 @@ def wefat(load_word_vector, resfname = 'result_score'):
     # goal: calculate s(w, A, B) using formula at pg.10 Semantics derived automatically from language corpora necessarily contain human biases
 
     # 1. traverse the glove file and get the cooresponding vectors
-    g_a, g_b, g_x, g_w = load_word_vector(W, A, B)
+    g_a, g_b, g_x, g_y, g_union = load_word_vector(W, A, B)
+
     # 2. get mean(cos(w,a)), mean(cos(w,b)
     # 3. calculate std-dev(cos(w,x))
     s_v = []
     # s values:
-    for w in g_w:
-        s_v.append((mean_cos(w,g_a)-mean_cos(w,g_b))/std_dev(w,g_x))
+    for w in g_x:
+        s_v.append((mean_cos(w,g_a)-mean_cos(w,g_b))/std_dev(w,g_union))
     print s_v
     resdir = 'result-score/'
     print 'saving result score to...' + resdir + resfname
@@ -86,6 +89,36 @@ def wefat(load_word_vector, resfname = 'result_score'):
     w_f.close()
     a_f.close()
     b_f.close()
+
+def s_sum_word_attrs(target_words, g_a, g_b):
+    # sigma_x s(x, A, B)
+    s = 0
+    for w in target_words:
+        s += mean_cos(w, g_a) - mean_cos(w, g_b)
+    return s
+
+def weat(load_word_vector, resfname = 'result_score'):
+    file_dir = 'target-attr-words/'
+    type_str = 'occupation'
+    w_f = open(file_dir + 'target_words-' + type_str)
+    a_f = open(file_dir + 'attribute_a-' + type_str)
+    b_f = open(file_dir + 'attribute_b-' + type_str) 
+    
+    # target words
+    X = x_f.readlines()[0].strip().split(', ')
+    Y = y_f.readlines()[0].strip().split(', ')
+
+    # attribute words
+    A = a_f.readlines()[0].strip().split(', ')
+    B = b_f.readlines()[0].strip().split(', ')
+
+    # load corresponding word vectors
+    g_a, g_b, g_x, g_w, g_y = load_word_vector(X, A, B, Y)
+
+    score = s_sum_word_attrs(g_x, g_a, g_b) - s_sum_word_attrs(g_y, g_a, g_b)
+
+    return score
+
 
 def main():
     wefat(load_from_glove)
