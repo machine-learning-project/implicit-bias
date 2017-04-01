@@ -100,7 +100,8 @@ def s_sum_word_attrs(target_words, g_a, g_b):
 def weat(load_word_vector, resfname = 'result_score'):
     file_dir = 'target-attr-words/'
     type_str = 'occupation'
-    w_f = open(file_dir + 'target_words-' + type_str)
+    x_f = open(file_dir + 'target_words_x-' + type_str)
+    y_f = open(file_dir + 'target_words_y-' + type_str)
     a_f = open(file_dir + 'attribute_a-' + type_str)
     b_f = open(file_dir + 'attribute_b-' + type_str) 
     
