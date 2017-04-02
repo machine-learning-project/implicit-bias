@@ -60,8 +60,7 @@ class WVModel(object):
 
 	def __init__(self, text_dir, judge_name = 'all', caseid_set = []):
 		self.text_dir = text_dir
-		#self.model_name = 'tmp/model-' + judge_name
-		self.model_name = 'tmp/model-' + '1980'
+		self.model_name = 'tmp/model-' + judge_name
 		self.judge_name = judge_name
 		self.caseid_set = caseid_set
 
@@ -113,7 +112,14 @@ class WVModel(object):
 		self.model = gensim.models.Word2Vec.load(self.model_name)
 
 		# use WEFAT method
-		WEFAT.weat(self.load_word_vector)
+		WEFAT.wefat(self.load_word_vector)
+
+	def calc_weat(self):
+		# load model
+		self.model = gensim.models.Word2Vec.load(self.model_name)
+
+		# use WEAT method
+		return WEFAT.weat(self.load_word_vector, self.judge_name)		
 
 def main():
 	# directory for text data

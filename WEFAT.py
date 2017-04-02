@@ -130,7 +130,7 @@ def weat(load_word_vector, resfname = 'result_score'):
 
     print score, effect_size
 
-    return score
+    return score, effect_size
 
 
 def main():

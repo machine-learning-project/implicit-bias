@@ -38,7 +38,24 @@ def train_models(judge_name, caseid_set):
 	# Since all text by one judge is a relatively small corpus, 
 	# use min_count = 1 when training
 	model.train_model(min_count_ = 1)
-	model.use_model()
+
+def use_models(fname):
+	scores = {}
+	text_dir = 'cleaned'
+	csv.field_size_limit(sys.maxsize)
+	with open(fname, 'rb') as csvfile:
+		cjreader = csv.reader(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+		for row in cjreader:
+			model = WEFAT_Judge.WVModel(text_dir, row[0])
+			score, effect_size = model.calc_weat()
+			scores[row[0]] = [score, effect_size]
+
+
+	typestr = 'weapon'
+	with open('weat-res-' + typestr, 'wb') as csvfile:
+		reswriter = csv.writer(csvfile, delimiter=',')
+		for key, value in scores.iteritems():
+			reswriter.writerow([key] + [value])
 
 
 def load_csv(fname):
@@ -54,18 +71,19 @@ def main():
 	cj_fname = 'tmp/judge_correspond_case.csv'
 
 	if len(sys.argv) != 2:
-		print 'usage: python WEFAT_judge_by_judge.py [-p|-u|-t]'
+		print 'usage: python WEFAT_judge_by_judge.py [-p|-t|-u]'
 		print '-p: process dta data to get corresponding case and judge'
-		print '-u: train and use model for computing corresponding score of each judge'
+		print '-t: train model'
+		print '-u: use model for computing corresponding score of each judge'
 	elif sys.argv[1] == '-p':
 		# process dataset to get corresponding relationship between cases and judges
 		# save the result to cj_fname
 		load_dta(dta_fname, cj_fname)
-	elif sys.argv[1] == '-u':
+	elif sys.argv[1] == '-t':
 		# use cj_fname to train word vector judge by judge
 		load_csv(cj_fname)
-
-	
+	elif sys.argv[1] == '-u':
+		use_models(cj_fname)
 
 
 if __name__ == "__main__":
