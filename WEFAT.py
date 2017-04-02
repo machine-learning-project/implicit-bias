@@ -24,15 +24,15 @@ def std_dev(w,X):
     for i in range(len(X)):
         cos_rst.append(cos(w,X[i]))
     cos_avg = sum(cos_rst)/len(cos_rst)
-    return sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst)
+    return math.sqrt(sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst))
 
 def load_from_glove(X, A, B, Y=[]):
     g_a = []
     g_b = []
     g_x = []
-    g_union = []   
-    g_y = [] 
-    
+    g_union = []
+    g_y = []
+
     print "loading file"
 
     for line in open('glove.840B.300d.txt'):
@@ -79,13 +79,12 @@ def wefat(load_word_vector, resfname = 'result_score'):
     # s values:
     for w in g_x:
         s_v.append((mean_cos(w,g_a)-mean_cos(w,g_b))/std_dev(w,g_union))
-    print s_v
     resdir = 'result-score/'
     print 'saving result score to...' + resdir + resfname
     resfile = open(resdir + resfname + '.txt', 'w')
     for item in s_v:
         resfile.write(str(item) + ', ')
-    resfile.close() 
+    resfile.close()
 
     w_f.close()
     a_f.close()
@@ -103,16 +102,16 @@ def std_dev_score(g_union, g_a, g_b):
     for i in range(len(g_union)):
         cos_rst.append(mean_cos(g_union[i], g_a) - mean_cos(g_union[i], g_b))
     cos_avg = sum(cos_rst)/len(cos_rst)
-    return sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst)
+    return math.sqrt(sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst))
 
 def weat(load_word_vector, resfname = 'result_score'):
     file_dir = 'target-attr-words/'
-    type_str = 'occupation'
+    type_str = 'artsci2'
     x_f = open(file_dir + 'target_words_x-' + type_str)
     y_f = open(file_dir + 'target_words_y-' + type_str)
     a_f = open(file_dir + 'attribute_a-' + type_str)
-    b_f = open(file_dir + 'attribute_b-' + type_str) 
-    
+    b_f = open(file_dir + 'attribute_b-' + type_str)
+
     # target words
     X = x_f.readlines()[0].strip().split(', ')
     Y = y_f.readlines()[0].strip().split(', ')
@@ -125,7 +124,7 @@ def weat(load_word_vector, resfname = 'result_score'):
     g_a, g_b, g_x, g_y, g_union = load_word_vector(X, A, B, Y)
 
     score = s_sum_word_attrs(g_x, g_a, g_b) - s_sum_word_attrs(g_y, g_a, g_b)
-    
+
     effect_size = s_sum_word_attrs(g_x, g_a, g_b)/len(g_x) - s_sum_word_attrs(g_y, g_a, g_b)/len(g_y)
     effect_size /= std_dev_score(g_union, g_a, g_b)
 
@@ -143,6 +142,6 @@ def main():
     elif sys.argv[1] == '-weat':
         weat(load_from_glove)
 
-    
+
 if __name__ == "__main__":
     main()

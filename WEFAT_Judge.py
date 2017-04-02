@@ -2,12 +2,12 @@ import gensim
 import os
 from glob import glob
 from zipfile import ZipFile
-import sys  
+import sys
 import re
 import WEFAT
 
 # set default utf8 encoding to open file
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 # sentence generator from text
@@ -24,7 +24,7 @@ class Sentence(object):
 		norm_words = re.split('\W+', text.lower())
 
 		# can also remove stopwords
-		
+
 		return norm_words
 
 	# get word from text
@@ -48,19 +48,20 @@ class Sentence(object):
 
 				# if there is a specified case set, then only process cases in the set
 				if len(self.caseid_set) != 0 and caseid not in self.caseid_set:
-					continue 
-				print fname, caseid       
+					continue
+				print fname, caseid
 
 				# open file and read line by line
 				with zfile.open(fname) as f:
-					for line in f:    
+					for line in f:
 						yield self.normalize(line)
 
 class WVModel(object):
 
 	def __init__(self, text_dir, judge_name = 'all', caseid_set = []):
 		self.text_dir = text_dir
-		self.model_name = 'tmp/model-' + judge_name
+		#self.model_name = 'tmp/model-' + judge_name
+		self.model_name = 'tmp/model-' + '1980'
 		self.judge_name = judge_name
 		self.caseid_set = caseid_set
 
@@ -96,12 +97,12 @@ class WVModel(object):
 			if b in self.model.wv.vocab:
 				g_b.append(self.model[b])
 			else:
-				print b, 'not in vocabulary'	
+				print b, 'not in vocabulary'
 		for y in Y:
 			if y in self.model.wv.vocab:
 				g_y.append(self.model[y])
 			else:
-				print y, 'not in vocabulary'		
+				print y, 'not in vocabulary'
 
 		g_union = g_a + g_b
 
@@ -112,10 +113,10 @@ class WVModel(object):
 		self.model = gensim.models.Word2Vec.load(self.model_name)
 
 		# use WEFAT method
-		WEFAT.wefat(self.load_word_vector, self.judge_name)
+		WEFAT.weat(self.load_word_vector)
 
 def main():
-	# directory for text data 
+	# directory for text data
 	text_dir = 'cleaned'
 
 	wvmodel = WVModel(text_dir)
@@ -131,5 +132,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
-
