@@ -28,8 +28,8 @@ def load_dta(fname, res):
 	# JudgeName, caseid_1 caseid_2 ...
 	with open(res, 'wb') as csvfile:
 		reswriter = csv.writer(csvfile, delimiter=',')
-		
-		for key, value in sorted(dic.items(), key=len(operator.itemgetter(1))):
+		# sort dictionary item list by number of cases
+		for key, value in sorted(dic.items(), key=lambda x: len(x[1]), reverse = True):
 			valstr = ' '.join(value)
 			reswriter.writerow([key] + [valstr])
 
