@@ -64,7 +64,11 @@ class WVModel(object):
 		self.judge_name = judge_name
 		self.caseid_set = caseid_set
 
-	def train_model(self, min_count_ = 5):
+	def train_model(self, min_count_ = 5, override = False):
+		# check if model already exists
+		if os.path.isfile(self.model_name) and not override:
+			print self.model_name, 'already exists'
+			return 
 		# generate words from text
 		sentences = Sentence(self.text_dir, self.caseid_set)
 		# train word vectors

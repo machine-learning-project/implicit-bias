@@ -2,6 +2,7 @@ import csv
 import pandas
 import sys
 import WEFAT_Judge
+import operator
 
 def load_dta(fname, res):
 	itr = pandas.read_stata(fname, chunksize=10000)
@@ -28,7 +29,7 @@ def load_dta(fname, res):
 	with open(res, 'wb') as csvfile:
 		reswriter = csv.writer(csvfile, delimiter=',')
 		
-		for key, value in dic.iteritems():
+		for key, value in sorted(dic.items(), key=len(operator.itemgetter(1))):
 			valstr = ' '.join(value)
 			reswriter.writerow([key] + [valstr])
 
@@ -61,10 +62,22 @@ def use_models(fname):
 def load_csv(fname):
 	# set maxsize as limitsize to read huge fields
 	csv.field_size_limit(sys.maxsize)
+	# train the first 200 judges who has most cases 
+	count = 0
+	JUDGE_NUM = 200
+	# record the cases used in training model
+	used_cases = 0
 	with open(fname, 'rb') as csvfile:
 		cjreader = csv.reader(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
 		for row in cjreader:
+			if count > JUDGE_NUM:
+				break
 			train_models(row[0], row[1].split(' '))
+			count += 1
+			used_cases += len(row[1].split(' '))
+
+	print 'total trained models (judge) count: ', JUDGE_NUM
+	print 'total used cases count: ', used_cases
 
 def main():
 	dta_fname = 'data/BloombergVOTELEVEL_Touse.dta'
