@@ -104,9 +104,9 @@ def std_dev_score(g_union, g_a, g_b):
     cos_avg = sum(cos_rst)/len(cos_rst)
     return math.sqrt(sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst))
 
-def weat(load_word_vector, resfname = 'result_score'):
+def weat(load_word_vector, type_str, resfname = 'result_score'):
     file_dir = 'target-attr-words/'
-    type_str = 'artsci2'
+
     x_f = open(file_dir + 'target_words_x-' + type_str)
     y_f = open(file_dir + 'target_words_y-' + type_str)
     a_f = open(file_dir + 'attribute_a-' + type_str)
@@ -140,7 +140,8 @@ def main():
     elif sys.argv[1] == '-wefat':
         wefat(load_from_glove)
     elif sys.argv[1] == '-weat':
-        weat(load_from_glove)
+        # example for using weat
+        weat(load_from_glove, type_str = 'weapon')
 
 
 if __name__ == "__main__":

@@ -112,18 +112,24 @@ class WVModel(object):
 		return g_a, g_b, g_x, g_y, g_union
 
 	def use_model(self):
+		if not os.path.isfile(self.model_name):
+			print self.model_name, 'does not exists'
+			return None
 		# load model
 		self.model = gensim.models.Word2Vec.load(self.model_name)
 
 		# use WEFAT method
 		WEFAT.wefat(self.load_word_vector)
 
-	def calc_weat(self):
+	def calc_weat(self, type_str):
+		if not os.path.isfile(self.model_name):
+			print self.model_name, 'does not exists.'
+			return None, None
 		# load model
 		self.model = gensim.models.Word2Vec.load(self.model_name)
 
 		# use WEAT method
-		return WEFAT.weat(self.load_word_vector, self.judge_name)		
+		return WEFAT.weat(self.load_word_vector, type_str, self.judge_name)		
 
 def main():
 	# directory for text data
