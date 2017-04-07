@@ -38,7 +38,7 @@ def load_dta(fname, res):
 def train_models(judge_name, caseid_set):
 	text_dir = 'cleaned'
 	model = WEFAT_Judge.WVModel(text_dir, judge_name, caseid_set)
-	# Since all text by one judge is a relatively small corpus,
+	# Since all text by one judge is a relatively small corpus, 
 	# use min_count = 1 when training
 	model.train_model(min_count_ = 1)
 
@@ -47,6 +47,7 @@ def use_models(judge_list_fname, stimuli_set_fname):
 	with open(stimuli_set_fname, 'rb') as txtfile:
 		for line in txtfile:
 			line = line.strip()
+			print 'processing set', line
 			use_model(judge_list_fname, line)
 
 
@@ -58,14 +59,16 @@ def use_model(judge_list_fname, type_str):
 	with open(judge_list_fname, 'rb') as csvfile:
 		cjreader = csv.reader(csvfile)
 		for row in cjreader:
-			# if count > JUDGE_NUM:
-			# 	break
+			if count > JUDGE_NUM:
+				break
 			count += 1
 			model = WEFAT_Judge.WVModel(text_dir, row[0])
 			score, effect_size = model.calc_weat(type_str)
 			# check if not None
 			if score and effect_size:
 				scores[row[0]] = [score, effect_size]
+			else:
+				scores[row[0]] = ''
 
 	# write the weat score of each judge back in corresponding file
 	with open('result-score/weat-res-' + type_str, 'wb') as csvfile:
@@ -77,7 +80,7 @@ def use_model(judge_list_fname, type_str):
 def load_csv(fname, judge_list_fname):
 	# set maxsize as limitsize to read huge fields
 	csv.field_size_limit(sys.maxsize)
-	# train the first 200 judges who has most cases
+	# train the first 200 judges who has most cases 
 	count = 0
 	# record the cases used in training model
 	used_cases = 0
