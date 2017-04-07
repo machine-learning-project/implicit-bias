@@ -121,7 +121,10 @@ def weat(load_word_vector, type_str, resfname = 'result_score'):
     B = b_f.readlines()[0].strip().split(', ')
 
     # load corresponding word vectors
-    g_a, g_b, g_x, g_y, g_union = load_word_vector(X, A, B, Y)
+    try:
+        g_a, g_b, g_x, g_y, g_union = load_word_vector(X, A, B, Y)
+    except LookupError as err:
+        return None, None
 
     score = s_sum_word_attrs(g_x, g_a, g_b) - s_sum_word_attrs(g_y, g_a, g_b)
 

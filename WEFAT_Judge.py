@@ -91,6 +91,7 @@ class WVModel(object):
 				g_x.append(self.model[x])
 			else:
 				print x, 'not in vocabulary'
+				raise LookupError('not found in vocabulary')
 		for a in A:
 			if a in self.model.wv.vocab:
 				g_a.append(self.model[a])
@@ -106,6 +107,7 @@ class WVModel(object):
 				g_y.append(self.model[y])
 			else:
 				print y, 'not in vocabulary'
+				raise LookupError('not found in vocabulary')
 
 		g_union = g_a + g_b
 

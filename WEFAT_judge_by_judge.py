@@ -47,6 +47,7 @@ def use_models(judge_list_fname, stimuli_set_fname):
 	with open(stimuli_set_fname, 'rb') as txtfile:
 		for line in txtfile:
 			line = line.strip()
+			print 'processing set', line
 			use_model(judge_list_fname, line)
 
 
@@ -66,6 +67,8 @@ def use_model(judge_list_fname, type_str):
 			# check if not None
 			if score and effect_size:
 				scores[row[0]] = [score, effect_size]
+			else:
+				scores[row[0]] = ''
 
 	# write the weat score of each judge back in corresponding file
 	with open('result-score/weat-res-' + type_str, 'wb') as csvfile:
