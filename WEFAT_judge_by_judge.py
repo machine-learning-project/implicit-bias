@@ -56,26 +56,23 @@ def use_model(judge_list_fname, type_str):
 	text_dir = 'cleaned'
 	count = 0
 	# iterate through all judges
-	with open(judge_list_fname, 'rb') as csvfile:
+	with open(judge_list_fname, 'rb') as csvfile, open('result-score/weat-res-' + type_str, 'wb') as csvfile_w:
 		cjreader = csv.reader(csvfile)
+		reswriter = csv.writer(csvfile_w, delimiter=',')
 		for row in cjreader:
-			if count > JUDGE_NUM:
-				break
+			# if count > JUDGE_NUM:
+			# 	break
 			count += 1
 			model = WEFAT_Judge.WVModel(text_dir, row[0])
 			score, effect_size = model.calc_weat(type_str)
 			# check if not None
 			if score and effect_size:
 				scores[row[0]] = [score, effect_size]
+				value = [score, effect_size]
+				reswriter.writerow([row[0]] + [score] + [effect_size])
 			else:
 				scores[row[0]] = ''
-
-	# write the weat score of each judge back in corresponding file
-	with open('result-score/weat-res-' + type_str, 'wb') as csvfile:
-		reswriter = csv.writer(csvfile, delimiter=',')
-		for key, value in scores.iteritems():
-			reswriter.writerow([key] + [value])
-
+				reswriter.writerow([row[0]] + [])
 
 def load_csv(fname, judge_list_fname):
 	# set maxsize as limitsize to read huge fields
