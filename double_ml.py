@@ -53,9 +53,8 @@ def regression(fname):
 
 	print 'calculating theta...'
 	for index, row in transformed.iterrows():
-		print index
 		w = row['govt_wins'] - l0.predict(row['x_republican'])
-		v = row['x_weat'] - 2*m0.predict(row['x_republican'])
+		v = row['x_weat'] - m0.predict(row['x_republican'])
 		sum_v_sq += v*v
 		sum_vw += w*v
 
