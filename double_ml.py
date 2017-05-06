@@ -2,6 +2,7 @@ import pandas
 import numpy as np
 import csv
 from sklearn.ensemble import RandomForestRegressor
+import statsmodels.api as sm
 
 def regression(fname):
 	df = pandas.read_csv(fname, delimiter=',', skiprows=1,
@@ -51,15 +52,29 @@ def regression(fname):
 	sum_v_sq = 0
 	sum_vw = 0
 
-	print 'calculating theta...'
+	W = []
+	V = []
+
+	print 'calculating residualization...'
+	
 	for index, row in transformed.iterrows():
 		w = row['govt_wins'] - l0.predict(row['x_republican'])
 		v = row['x_weat'] - m0.predict(row['x_republican'])
+		W.append(w)
+		V.append(v)
 		sum_v_sq += v*v
 		sum_vw += w*v
 
+	# calculating theta using OLS
+	print 'fitting OLS...'
+	model = sm.OLS(W,V)
+	results = model.fit()
+	print "params", results.params
+	print "tvalues", results.tvalues
+
+	# calculating theta using formula
 	theta = (1.0/sum_v_sq) * sum_vw
-	print 'theta:', theta
+	print 'theta from formula:', theta
 
 def main():
 	combined_data_fname = 'data/combined_govern_data.csv'
