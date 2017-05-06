@@ -4,6 +4,7 @@ import csv
 from sklearn.ensemble import RandomForestRegressor
 import statsmodels.api as sm
 from sklearn.model_selection import KFold
+import math
 
 def regression_cross_valid(fname):
 	df = pandas.read_csv(fname, delimiter=',', skiprows=1,
@@ -50,7 +51,7 @@ def regression_cross_valid(fname):
 	STDE /= float(len(STDEs))
 
 	print "average treatment effect:", ATE
-	print "standard error:", STDE
+	print "standard error:", math.sqrt(STDE)
 
 def regression(D_aux, D_, Y_aux, Y_, Z_aux, Z_):
 
