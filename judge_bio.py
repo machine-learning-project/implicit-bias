@@ -9,8 +9,16 @@ def load_dta(fname, weat_fname):
 	judge_in_list_count = 0
 	judge_weat = {}
 	judge_gender = {}
+	judge_origin = {}
 	judge_race = {}
 	judge_year = {}
+	city_map = {}
+	south = ['KY','FL','AR','MD','NC','SC','TX','VA','GA']
+	with open("./data/city_format.csv",'rb') as city_code:
+		cjreader = csv.reader(city_code, delimiter=',')
+		for row in cjreader:
+			if len(row) == 3 and row[2] in south:
+				city_map[int(row[0])] = row[2]
 
 	with open(weat_fname, 'rb') as weat_file:
 		for line in weat_file:
@@ -28,7 +36,7 @@ def load_dta(fname, weat_fname):
 		for index, row in chunk.iterrows():
 			count += 1
 			judge_first_name = row['name'].split(",")[0]
-			print count, row['name'], row['gender'], row['race'], row['yearb']
+			print count, row['name'], row['gender'], row['race'], row['yearb'], row['csb']
 
 			if judge_first_name.upper() in judge_list:
 				judge_list.remove(judge_first_name.upper())
@@ -36,20 +44,29 @@ def load_dta(fname, weat_fname):
 				judge_gender[judge_first_name.upper()] = row['gender']
 				judge_race[judge_first_name.upper()] = row['race']
 				judge_year[judge_first_name.upper()] = row['yearb']
+				if row['csb'] in city_map:
+					judge_origin[judge_first_name.upper()] = 1
+				else:
+					judge_origin[judge_first_name.upper()] = 0
 
 	print "judge num:", judge_in_list_count
+	with open("result-score/judge_csb.csv", 'wb') as csvfile:
+		reswriter_ = csv.writer(csvfile, delimiter=',')
+		for key, value in judge_origin.items():
+			weat_score = judge_weat[key]
+			reswriter_.writerow([weat_score] + [value])
 
 	with open("result-score/judge_year_weat_gender.csv", 'wb') as csvfile:
 		reswriter_ = csv.writer(csvfile, delimiter=',')
 		for key, value in judge_year.items():
 			weat_score = judge_weat[key]
-			reswriter_.writerow([weat_score] + [value])	
+			reswriter_.writerow([weat_score] + [value])
 
 def plot():
 	# scatter plot for judge birth year and weat score
 	weat_score = []
 	birth_year = []
-	with open("result-score/judge_year_weat.csv", 'rb') as weat_file:
+	with open("result-score/judge_csb.csv", 'rb') as weat_file:
 		for line in weat_file:
 			strs = line.split(',')
 			score = float(strs[0])
@@ -68,7 +85,7 @@ def plot():
 def main():
 	dta_fname = 'data/auburn_district_w_songer_codes.dta'
 	weat_fname = 'result-score/weat-res-gender'
-	load_dta(dta_fname, weat_fname)
+	#load_dta(dta_fname, weat_fname)
 	plot()
 
 if __name__ == "__main__":
