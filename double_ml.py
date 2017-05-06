@@ -3,8 +3,9 @@ import numpy as np
 import csv
 from sklearn.ensemble import RandomForestRegressor
 import statsmodels.api as sm
+from sklearn.model_selection import KFold
 
-def regression(fname):
+def regression_cross_valid(fname):
 	df = pandas.read_csv(fname, delimiter=',', skiprows=1,
 		 names=["caseid", "year", "songername", "songerfirstname", "circuit", "govt_wins", "x_republican", "x_weat"],
 		 dtype={"year":int, "circuit":int, "govt_wins":float, "x_republican":float, "x_weat":float})
@@ -22,63 +23,64 @@ def regression(fname):
 	# control variable
 	Z = transformed['x_republican']
 
-	# copy over
-	D_ = np.zeros((D.shape[0], 1))
-	Z_ = np.zeros((Z.shape[0], 1))
-	Y_ = np.zeros((Y.shape[0], 1))
+	# treatment effect
+	TEs = []
+	# standard error
+	STDEs = []
+	K = 5
+	print "sample splitting: ", K
+	k_fold = KFold(n_splits=K)
+	for train, test in k_fold.split(Y):
+		D_aux = D[train]
+		Y_aux = Y[train]
+		Z_aux = Z[train]
+		Z_ = Z[test]
+		D_ = D[test]
+		Y_ = Y[test]
+		param, tvalue, se = regression(D_aux, D_, Y_aux, Y_, Z_aux, Z_)
+		TEs.append(param[0])
+		STDEs.append(se[0])
 
-	for i in range(D.shape[0]):
-		D_[i] = D[i]
+	# average treatment effect
+	ATE = sum(TEs)/float(len(TEs))
+	# standard error
+	STDE = 0.0
+	for i in range(len(TEs)):
+		STDE += (STDEs[i]**2 + (TEs[i] - ATE)**2)
+	STDE /= float(len(STDEs))
 
-	for i in range(Z.shape[0]):
-		Z_[i] = Z[i]
+	print "average treatment effect:", ATE
+	print "standard error:", STDE
 
-	for i in range(Y.shape[0]):
-		Y_[i] = Y[i]
-
-	print Z.shape, Z_.shape
-	print D.shape, D_.shape
-	print Y.shape, Y_.shape
+def regression(D_aux, D_, Y_aux, Y_, Z_aux, Z_):
 
 	print 'fitting m0...'
 	m0 = RandomForestRegressor(n_estimators=10)
-	m0.fit(Z_, D_.ravel())
+	m0.fit(Z_aux.reshape(-1,1), D_aux.ravel())
 
 	print 'fitting l0...'
 	l0 = RandomForestRegressor(n_estimators=10)
-	l0.fit(Z_, Y_.ravel())
-
-	theta = 0.0
-	sum_v_sq = 0
-	sum_vw = 0
-
-	W = []
-	V = []
+	l0.fit(Z_aux.reshape(-1,1), Y_aux.ravel())
 
 	print 'calculating residualization...'
 	
-	for index, row in transformed.iterrows():
-		w = row['govt_wins'] - l0.predict(row['x_republican'])
-		v = row['x_weat'] - m0.predict(row['x_republican'])
-		W.append(w)
-		V.append(v)
-		sum_v_sq += v*v
-		sum_vw += w*v
+	W = Y_.reshape(Y_.shape[0]) - l0.predict(Z_.reshape(-1,1))
+	V = D_.reshape(D_.shape[0]) - m0.predict(Z_.reshape(-1,1))
 
 	# calculating theta using OLS
 	print 'fitting OLS...'
 	model = sm.OLS(W,V)
 	results = model.fit()
-	print "params", results.params
-	print "tvalues", results.tvalues
+	print "params", results.params[0]
+	print "tvalues", results.tvalues[0]
+	print "stderr", results.bse[0], results.params/results.tvalues
 
-	# calculating theta using formula
-	theta = (1.0/sum_v_sq) * sum_vw
-	print 'theta from formula:', theta
+	return results.params, results.tvalues, results.bse
+
 
 def main():
 	combined_data_fname = 'data/combined_govern_data.csv'
-	regression(combined_data_fname)
+	regression_cross_valid(combined_data_fname)
 
 if __name__ == "__main__":
 	main()
