@@ -2,13 +2,16 @@ import pandas
 import numpy as np
 import csv
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.neural_network import MLPRegressor
 import statsmodels.api as sm
 from sklearn.model_selection import KFold
 import math
 
 def regression_cross_valid(fname):
 	df = pandas.read_csv(fname, delimiter=',', skiprows=1,
-		 names=["caseid", "year", "songername", "songerfirstname", "circuit", "govt_wins", "x_republican", "x_weat"],
+		 names=["caseid", "year", "songername", "songerfirstname", "circuit", "govt_wins", "x_republican", "x_weat", 'amon', 'ayear', 'city', 'state', 'aba', 
+		'party', 'ageon', 'sother', 'yearb', 'csb', 'gender', 'religion', 'ls'],
 		 dtype={"year":int, "circuit":int, "govt_wins":float, "x_republican":float, "x_weat":float})
 	
 	print "loading", fname, df.shape
@@ -18,11 +21,12 @@ def regression_cross_valid(fname):
 	transformed = groupby_ct.transform(demean)
 
 	# output
-	Y = transformed['govt_wins']
+	Y = transformed['govt_wins'].values
 	# treatment variable
-	D = transformed['x_weat']
+	D = transformed['x_weat'].values
 	# control variable
-	Z = transformed['x_republican']
+	Z = transformed[['x_republican', 'amon', 'ayear', 'city', 'state', 'aba', 
+		'party', 'ageon', 'sother', 'yearb', 'csb', 'gender', 'religion', 'ls']].values
 
 	# treatment effect
 	TEs = []
@@ -56,17 +60,18 @@ def regression_cross_valid(fname):
 def regression(D_aux, D_, Y_aux, Y_, Z_aux, Z_):
 
 	print 'fitting m0...'
+	# m0 = MLPRegressor()
 	m0 = RandomForestRegressor(n_estimators=10)
-	m0.fit(Z_aux.reshape(-1,1), D_aux.ravel())
+	m0.fit(Z_aux, D_aux)
 
 	print 'fitting l0...'
 	l0 = RandomForestRegressor(n_estimators=10)
-	l0.fit(Z_aux.reshape(-1,1), Y_aux.ravel())
+	l0.fit(Z_aux, Y_aux)
 
 	print 'calculating residualization...'
 	
-	W = Y_.reshape(Y_.shape[0]) - l0.predict(Z_.reshape(-1,1))
-	V = D_.reshape(D_.shape[0]) - m0.predict(Z_.reshape(-1,1))
+	W = Y_.reshape(Y_.shape[0]) - l0.predict(Z_)
+	V = D_.reshape(D_.shape[0]) - m0.predict(Z_)
 
 	# calculating theta using OLS
 	print 'fitting OLS...'

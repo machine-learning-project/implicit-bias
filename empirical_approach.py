@@ -47,11 +47,14 @@ def load_dta(fname, res, judge_co_fname):
 					dic[songer_first_name] = row['x_republican']
 				x_republican = dic[songer_first_name]
 
-			# filter cases related to government
+			# filter cases related to government and labor
 			if row['govt_any'] != 1.0:
 				continue
 
-			print count, row['caseid'], row['govt_any'], row['year'], row['songername'], songer_first_name, row['circuit'], row['govt_wins'], row['x_republican'], x_republican
+			if row['geniss1'] != 6.0:
+				continue
+
+			print count, row['caseid'], row['govt_any'], row['year'], row['songername'], songer_first_name, row['circuit'], row['govt_wins'], row['x_republican'], x_republican, row['geniss1'] == 6.0
 			reswriter.writerow([row['caseid']] + [row['year']] + [row['songername']] +
 				[songer_first_name] + [row['circuit']] + [row['govt_wins']] + [x_republican])
 
@@ -67,9 +70,11 @@ def load_dta(fname, res, judge_co_fname):
 			reswriter_.writerow([key] + [value])
 
 
-def combine_data(data_fname, judge_co_fname, judge_weat_fname, combined_fname):
+def combine_data(data_fname, judge_co_fname, judge_weat_fname, combined_fname, judge_bio_fname):
 	judge_repub = {}
 	judge_weat = {}
+	df = pandas.read_stata(judge_bio_fname)
+
 	with open(judge_co_fname, 'rb') as csvfile:
 		cjreader = csv.reader(csvfile, delimiter=',')
 		for row in cjreader:
@@ -90,6 +95,12 @@ def combine_data(data_fname, judge_co_fname, judge_weat_fname, combined_fname):
 
 	print "loading", judge_weat_fname, len(judge_weat)
 
+	# filter judges with name
+	getfirstname = lambda x: x.split(",")[0].upper()
+	judge_bio = df[df['name'].apply(getfirstname).isin(list(judge_weat.keys()))]
+	judge_bio = judge_bio[['name', 'amon', 'ayear', 'city', 'state', 'circuit', 'aba', 
+		'party', 'ageon', 'congress', 'sother', 'yearb', 'csb', 'gender', 'religion', 'ls']].dropna()
+
 	with open(data_fname, 'rb') as csvfile, open(combined_fname, 'wb') as csvfile_w:
 		csvfile_w.write("# caseid, year, songername, songerfirstname, circuit, govt_wins, x_republican, x_weat\n")
 		first_line = True
@@ -104,8 +115,15 @@ def combine_data(data_fname, judge_co_fname, judge_weat_fname, combined_fname):
 			else:
 				x_republican = judge_repub[row[3]]
 				x_weat = judge_weat[row[3]]
+				j_bio = judge_bio.loc[judge_bio['name'].apply(getfirstname) == row[3]]
+				if j_bio.empty:
+					continue
 				cjwriter.writerow([row[0]] + [row[1]] + [row[2]] + [row[3]] 
-					+ [row[4]] + [row[5]] + [x_republican] + [x_weat])
+					+ [row[4]] + [row[5]] + [x_republican] + [x_weat] + [j_bio['amon'].values[0]] 
+					+ [j_bio['ayear'].values[0]] + [j_bio['city'].values[0]] + [j_bio['state'].values[0]]
+					+ [j_bio['aba'].values[0]] + [j_bio['party'].values[0]] + [j_bio['ageon'].values[0]]
+					+ [j_bio['sother'].values[0]] + [j_bio['yearb'].values[0]] + [j_bio['csb'].values[0]] 
+					+ [j_bio['gender'].values[0]] + [j_bio['religion'].values[0]] + [j_bio['ls'].values[0]])
 
 
 def OLS_regression(Y, X):
@@ -114,10 +132,12 @@ def OLS_regression(Y, X):
 	results = model.fit()
 	print "params", results.params
 	print "tvalues", results.tvalues
+	print "std error", results.bse
 
 def regression(fname):
 	df = pandas.read_csv(fname, delimiter=',', skiprows=1,
-		 names=["caseid", "year", "songername", "songerfirstname", "circuit", "govt_wins", "x_republican", "x_weat"],
+		 names=["caseid", "year", "songername", "songerfirstname", "circuit", "govt_wins", "x_republican", "x_weat", 'amon', 'ayear', 'city', 'state', 'aba', 
+		'party', 'ageon', 'sother', 'yearb', 'csb', 'gender', 'religion', 'ls'],
 		 dtype={"year":int, "circuit":int, "govt_wins":float, "x_republican":float, "x_weat":float})
 	
 	# drop last column
@@ -128,14 +148,9 @@ def regression(fname):
 	groupby_ct = df.groupby(['year', 'circuit'])
 	
 	transformed = groupby_ct.transform(demean)
-	# print transformed
 	Y = transformed['govt_wins']
-	X = transformed[['x_republican', 'x_weat']]
-	# print Y
-	print X
-	# for name, group in groupby_ct:
-		# print name
-		# print group
+	X = transformed[['x_republican', 'x_weat', 'amon', 'ayear', 'city', 'state', 'aba', 
+		'party', 'ageon', 'sother', 'yearb', 'csb', 'gender', 'religion', 'ls']]
 
 	OLS_regression(Y,X)
 
@@ -145,6 +160,7 @@ def main():
 	judge_co_fname = "data/judge_republican.csv"
 	combined_fname = 'data/combined_govern_data.csv'
 	judge_weat_fname = 'result-score/weat-res-government'
+	judge_bio_fname = 'data/auburn_district_w_songer_codes.dta'
 
 	# parse arguments
 	parser = argparse.ArgumentParser()
@@ -154,8 +170,8 @@ def main():
 
 	# process govern_data and store useful information into res_fname.
 	if args.p:
-		# load_dta(gov_fname, res_fname)
-		combine_data(res_fname, judge_co_fname, judge_weat_fname, combined_fname)
+		load_dta(gov_fname, res_fname, judge_co_fname)
+		# combine_data(res_fname, judge_co_fname, judge_weat_fname, combined_fname)
 
 	# do OLS based on judicial data
 	if args.t:
