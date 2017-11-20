@@ -105,7 +105,7 @@ def std_dev_score(g_union, g_a, g_b):
     return math.sqrt(sum((cos_avg-x)**2 for x in cos_rst)/len(cos_rst))
 
 def weat(load_word_vector, type_str, resfname = 'result_score'):
-    file_dir = 'target-attr-words/'
+    file_dir = 'target-attr-word/'
 
     x_f = open(file_dir + 'target_words_x-' + type_str)
     y_f = open(file_dir + 'target_words_y-' + type_str)
